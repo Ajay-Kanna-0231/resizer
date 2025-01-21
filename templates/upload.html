@@ -1,21 +1,223 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Image Resize</title>
+    <title>Pic Resizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #2c3e50; /* Dark background color */
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 100px;
+            opacity: 0.8; /* Increased opacity */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #3498db; /* Blue background color for the container */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            color: white; /* White color for the title */
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: white; /* White color for the labels */
+            font-weight: 500;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #2980b9;
+            border-radius: 8px;
+            background: #f7f9fc;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="file"]:hover {
+            border-color: #1abc9c;
+        }
+
+        input[type="number"] {
+            width: calc(50% - 10px);
+            padding: 12px;
+            border: 2px solid #2980b9;
+            border-radius: 8px;
+            margin-right: 10px;
+            font-size: 14px;
+            appearance: none;
+            -moz-appearance: textfield;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="number"]:hover {
+            border-color: #1abc9c;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="submit"] {
+            width: 50%;
+            padding: 15px;
+            background: #1abc9c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 0 auto;
+            display: block;
+        }
+
+        input[type="submit"]:hover {
+            background: #16a085;
+        }
+
+        .note {
+            color: #ecf0f1;
+            font-size: 0.9em;
+            margin-top: 8px;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .flash.error {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .flash.info {
+            background: #3498db;
+            color: white;
+        }
+
+        .dimensions-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        .preview-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 300px;
+            display: none;
+            margin: 0 auto;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+    <script>
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
 </head>
 <body>
-    <h1>Upload and Resize Image</h1>
-    <form method="POST" enctype="multipart/form-data">
-        <p>
-            <input type="file" name="file" accept="image/*" required>
-        </p>
-        <p>
-            Width: <input type="number" name="width" placeholder="Enter width">
-        </p>
-        <p>
-            Height: <input type="number" name="height" placeholder="Enter height">
-        </p>
-        <input type="submit" value="Upload and Resize">
-    </form>
+    <img src="{{ url_for('static', filename='logo.webp') }}" alt="Logo" class="logo">
+    <div class="container">
+        <h1>Pic Resizer</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Select Image:</label>
+                <input type="file" name="file" accept="image/*" required onchange="previewImage(this)">
+                <div class="preview-container">
+                    <img id="imagePreview" alt="Preview">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Resize Dimensions:</label>
+                <div class="dimensions-container">
+                    <div class="input-group">
+                        <input type="number" name="width" placeholder="Width in pixels">
+                    </div>
+                    <div class="input-group">
+                        <input type="number" name="height" placeholder="Height in pixels">
+                    </div>
+                </div>
+                <div class="note">Leave blank to maintain original dimensions</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Target File Size (KB):</label>
+                <input type="number" name="size" placeholder="Enter target size in KB">
+                <div class="note">Leave blank to maintain original quality</div>
+            </div>
+            
+            <input type="submit" value="Process Image">
+        </form>
+    </div>
 </body>
-</html> 
+</html>
